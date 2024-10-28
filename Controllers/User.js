@@ -67,6 +67,7 @@ exports.getUserData = asyncHandler(async (req, res) => {
     avatar: user.avatar.url,
     bio: user.bio,
     isAdmin: user.isAdmin,
+    isTwitter: user.TwitterId ? true : false,
   };
   res.status(200).json(UserData);
 });
@@ -110,7 +111,7 @@ exports.UpdateUser = asyncHandler(async (req, res) => {
   let errors = [];
   const id = req.user;
   const { username, bio, password } = req.body;
-  const avatar = req.file ? req.file.path : null;
+  const avatar = req.file?.path;
   const user = await User.findById(id);
   if (!user) {
     return res.status(404).json({ message: "User not found" });
@@ -135,8 +136,8 @@ exports.UpdateUser = asyncHandler(async (req, res) => {
     user.username = username;
   }
   if (bio) {
-    if (bio.length > 100 || bio.trim().length < 3) {
-      errors.push("Bio must be between 3 and 100 characters long");
+    if (bio.length > 100 || bio.trim().length == 0) {
+      errors.push("Bio must be between 1 and 100 characters long");
       return res.status(400).json({ errors });
     }
     user.bio = bio;
@@ -146,8 +147,7 @@ exports.UpdateUser = asyncHandler(async (req, res) => {
       await cloudinary.uploader.destroy(user.avatar.publicId);
     }
     const result = await cloudinary.uploader.upload(avatar);
-    user.avatar.url = result.secure_url;
-    user.avatar.publicId = result.public_id;
+    user.avatar = { url: result.secure_url, publicId: result.public_id };
   }
   if (password) {
     if (password.trim().length < 8) {
@@ -163,4 +163,16 @@ exports.UpdateUser = asyncHandler(async (req, res) => {
   }
   await user.save();
   return res.status(200).json({ message: "User updated successfully" });
+});
+
+exports.handleTwitterAuth = asyncHandler(async (req, res) => {
+  const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, {
+    expiresIn: "30d",
+  });
+  res.cookie("token", token, {
+    httpOnly: true,
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+  });
+  // res.redirect(`${process.env.CLIENT_URL}/`);
+  return res.status(200).json({ message: "User logged in successfully" });
 });

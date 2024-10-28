@@ -2,13 +2,27 @@ const express = require("express");
 const app = express();
 const connectDB = require("./Configs/Database");
 const cookieParser = require("cookie-parser");
+const session = require("express-session");
+const passport = require("passport");
 require("dotenv").config();
+require("./Configs/passport");
 
 connectDB();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use("/user", require("./Routes/userRoutes"));
 
