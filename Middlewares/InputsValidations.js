@@ -1,11 +1,16 @@
 const { check, validationResult } = require("express-validator");
-const User = require("../Models/User");
 const validations = {
   ValidateRegister: [
     check("username")
-      .trim()
+      .trim() // Remove leading and trailing spaces
       .isLength({ min: 3 })
-      .withMessage("Username must be at least 3 characters long"),
+      .withMessage("Username must be at least 3 characters long")
+      .custom((value) => {
+        if (/\s/.test(value)) {
+          throw new Error("Username must not contain spaces");
+        }
+        return true;
+      }),
     check("password")
       .trim()
       .isLength({ min: 8 })

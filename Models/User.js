@@ -20,9 +20,11 @@ const UserSchema = new Schema(
       default: "Hello, I'm a new user!",
     },
     avatar: {
-      type: String,
-      default:
-        "https://res.cloudinary.com/drsodrtuf/image/upload/w_1000,c_fill,ar_1:1,g_auto,r_max,bo_10px_solid_white,b_rgb:262c35/v1729339258/a_sleek_minimalist_cat_face_without_squares_under_the_face_xbqyap.jpg",
+      type: Object,
+      default: {
+        url: "https://res.cloudinary.com/drsodrtuf/image/upload/w_1000,c_fill,ar_1:1,g_auto,r_max,bo_10px_solid_white,b_rgb:262c35/v1729339258/a_sleek_minimalist_cat_face_without_squares_under_the_face_xbqyap.jpg",
+        publicId: null,
+      },
     },
     isAdmin: {
       type: Boolean,
