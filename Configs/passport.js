@@ -21,7 +21,10 @@ passport.use(
               url: profile.photos[0].value,
               publicId: null,
             },
-            bio: profile._json.description,
+            bio:
+              profile._json.description && profile._json.description != ""
+                ? profile._json.description
+                : "Hello, I'm a new user!",
           });
           await newUser.save();
           return done(null, newUser);
