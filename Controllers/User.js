@@ -175,3 +175,17 @@ exports.handleTwitterAuth = asyncHandler(async (req, res) => {
   });
   return res.redirect(`http://localhost:3000/`);
 });
+
+exports.getUserByid = asyncHandler(async (req, res) => {
+  const id = req.params.id;
+  const user = await User.findById(id);
+  const UserData = {
+    id: user._id,
+    username: user.username,
+    avatar: user.avatar.url,
+    bio: user.bio,
+    isAdmin: user.isAdmin,
+    isTwitter: user.TwitterId ? true : false,
+  };
+  res.status(200).json(UserData);
+});

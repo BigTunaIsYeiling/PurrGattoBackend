@@ -10,6 +10,7 @@ const {
   GetUsersList,
   UpdateUser,
   handleTwitterAuth,
+  getUserByid,
 } = require("../Controllers/User");
 const {
   Validate,
@@ -21,6 +22,7 @@ const { UserAuth } = require("../Middlewares/UserAuth");
 router.post("/", ValidateRegister, Validate, register);
 router.post("/login", ValidateRegister, Validate, login);
 router.get("/", UserAuth, getUserData);
+router.get("/one/:id", getUserByid);
 router.put("/", UserAuth, upload.single("avatar"), UpdateUser);
 router.get("/users", UserAuth, GetUsersList);
 router.get("/refresh", UserAuth, RefreshToken);
