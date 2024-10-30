@@ -14,11 +14,13 @@ passport.use(
       try {
         const user = await User.findOne({ TwitterId: profile.id });
         if (!user) {
+          const userProfileImage = profile._json.profile_image_url_https;
+          const image = userProfileImage.replace("_normal", "");
           const newUser = new User({
             TwitterId: profile.id,
             username: profile.username,
             avatar: {
-              url: profile.photos[0].value,
+              url: image,
               publicId: null,
             },
             bio:
