@@ -32,7 +32,14 @@ exports.GetUserMessages = async (req, res) => {
     }).sort({
       createdAt: -1,
     });
-    res.status(200).json(messages);
+    const MessagesData = messages.map((message) => {
+      return {
+        id: message._id,
+        content: message.content,
+        createdAt: message.createdAt,
+      };
+    });
+    res.status(200).json(MessagesData);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
