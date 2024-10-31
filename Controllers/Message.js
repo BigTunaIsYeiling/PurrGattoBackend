@@ -27,7 +27,9 @@ exports.createMessage = async (req, res) => {
 exports.GetUserMessages = async (req, res) => {
   try {
     const id = req.user;
-    const messages = await Message.find({ receiver: id });
+    const messages = await Message.find({ receiver: id }).sort({
+      createdAt: -1,
+    });
     res.status(200).json(messages);
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -3,6 +3,7 @@ const argon = require("argon2");
 const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
 const cloudinary = require("../Configs/cloudinaryConfig");
+const Message = require("../Models/Message");
 exports.register = asyncHandler(async (req, res) => {
   let errors = [];
   const { username, password } = req.body;
@@ -61,6 +62,7 @@ exports.logout = asyncHandler(async (req, res) => {
 exports.getUserData = asyncHandler(async (req, res) => {
   const id = req.user;
   const user = await User.findById(id);
+  const Messages = await Message.find({ receiver: id });
   const UserData = {
     id: user._id,
     username: user.username,
@@ -68,6 +70,7 @@ exports.getUserData = asyncHandler(async (req, res) => {
     bio: user.bio,
     isAdmin: user.isAdmin,
     isTwitter: user.TwitterId ? true : false,
+    messages: Messages.length,
   };
   res.status(200).json(UserData);
 });
@@ -179,6 +182,7 @@ exports.handleTwitterAuth = asyncHandler(async (req, res) => {
 exports.getUserByid = asyncHandler(async (req, res) => {
   const id = req.params.id;
   const user = await User.findById(id);
+  const Messages = await Message.find({ receiver: id });
   const UserData = {
     id: user._id,
     username: user.username,
@@ -186,6 +190,7 @@ exports.getUserByid = asyncHandler(async (req, res) => {
     bio: user.bio,
     isAdmin: user.isAdmin,
     isTwitter: user.TwitterId ? true : false,
+    messages: Messages.length,
   };
   res.status(200).json(UserData);
 });
