@@ -35,3 +35,24 @@ exports.GetUserMessages = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.DeleteMessage = async (req, res) => {
+  try {
+    const id = req.user;
+    const { messageId } = req.body;
+    if (!messageId) {
+      return res.status(400).json({ error: "Message ID is required" });
+    }
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res.status(404).json({ error: "Message not found" });
+    }
+    if (message.receiver.toString() !== id) {
+      return res.status(401).json({ error: "You can't delete this message" });
+    }
+    await message.deleteOne();
+    res.status(200).json({ message: "Message deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
