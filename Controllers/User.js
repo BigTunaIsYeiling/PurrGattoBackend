@@ -62,7 +62,9 @@ exports.logout = asyncHandler(async (req, res) => {
 exports.getUserData = asyncHandler(async (req, res) => {
   const id = req.user;
   const user = await User.findById(id);
-  const Messages = await Message.find({ receiver: id });
+  const Messages = await Message.find({
+    $and: [{ receiver: id }, { isAnswered: false }],
+  });
   const UserData = {
     id: user._id,
     username: user.username,
@@ -182,7 +184,9 @@ exports.handleTwitterAuth = asyncHandler(async (req, res) => {
 exports.getUserByid = asyncHandler(async (req, res) => {
   const id = req.params.id;
   const user = await User.findById(id);
-  const Messages = await Message.find({ receiver: id });
+  const Messages = await Message.find({
+    $and: [{ receiver: id }, { isAnswered: false }],
+  });
   const UserData = {
     id: user._id,
     username: user.username,

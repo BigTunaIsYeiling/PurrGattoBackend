@@ -17,6 +17,10 @@ const messageSchema = new Schema(
       ref: "User",
       required: true,
     },
+    isAnswered: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

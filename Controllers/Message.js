@@ -1,5 +1,4 @@
 const Message = require("../Models/Message");
-const User = require("../Models/User");
 
 exports.createMessage = async (req, res) => {
   try {
@@ -16,6 +15,7 @@ exports.createMessage = async (req, res) => {
       content,
       sender: senderId,
       receiver: receiverId,
+      isAnswered: false,
     });
     await message.save();
     res.status(201).json(message);
@@ -27,7 +27,9 @@ exports.createMessage = async (req, res) => {
 exports.GetUserMessages = async (req, res) => {
   try {
     const id = req.user;
-    const messages = await Message.find({ receiver: id }).sort({
+    const messages = await Message.find({
+      $and: [{ receiver: id }, { isAnswered: false }],
+    }).sort({
       createdAt: -1,
     });
     res.status(200).json(messages);
