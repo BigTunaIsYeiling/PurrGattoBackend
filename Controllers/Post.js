@@ -78,27 +78,37 @@ exports.likePost = async (req, res) => {
 exports.getUserPosts = async (req, res) => {
   try {
     const { userId } = req.params;
-    const posts = await Post.find({ Author: userId }).sort({ createdAt: -1 });
+    const posts = await Post.find({
+      $and: [{ Author: userId }, { parentPost: null }],
+    }).sort({
+      createdAt: -1,
+    });
+
     const PostsData = await Promise.all(
       posts.map(async (post) => {
         const message = await Message.findById(post.messageId);
         const Replies = await Post.find({ parentPost: post._id }).sort({
           createdAt: -1,
         });
-        const RepliesData = Replies.map((reply) => {
-          return {
-            answer: reply.PostBody,
-            ask: message.content,
-            postId: reply.id,
-            createdAt: reply.createdAt,
-            likes: reply.likes,
-            message: message._id,
-          };
-        });
+
+        const RepliesData = await Promise.all(
+          Replies.map(async (reply) => {
+            const submessage = await Message.findById(reply.messageId);
+            return {
+              answer: reply.PostBody,
+              ask: submessage.content,
+              postId: reply._id,
+              createdAt: reply.createdAt,
+              likes: reply.likes,
+              message: message._id,
+            };
+          })
+        );
+
         return {
           answer: post.PostBody,
           ask: message.content,
-          postId: post.id,
+          postId: post._id,
           createdAt: post.createdAt,
           likes: post.likes,
           message: message._id,

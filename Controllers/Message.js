@@ -1,5 +1,5 @@
 const Message = require("../Models/Message");
-
+const Post = require("../Models/Post");
 exports.createMessage = async (req, res) => {
   try {
     const { content, senderId, receiverId } = req.body;
@@ -54,13 +54,18 @@ exports.GetUserMessages = async (req, res) => {
     }).sort({
       createdAt: -1,
     });
-    const MessagesData = messages.map((message) => {
-      return {
-        id: message._id,
-        content: message.content,
-        createdAt: message.createdAt,
-      };
-    });
+    const MessagesData = await Promise.all(
+      messages.map(async (message) => {
+        const post = await Post.findById(message.replyToPost);
+        return {
+          id: message._id,
+          content: message.content,
+          createdAt: message.createdAt,
+          post: post ? post.PostBody : null,
+          parentPost: post ? message.replyToPost : null,
+        };
+      })
+    );
     res.status(200).json(MessagesData);
   } catch (error) {
     res.status(500).json({ error: error.message });
