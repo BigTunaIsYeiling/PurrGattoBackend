@@ -122,54 +122,15 @@ exports.likePost = async (req, res) => {
     res.status(400).json({ error: "Unable to like post" });
   }
 };
-// Function to get all replies in a flat structure for a given post
-const getAllReplies = async (postId) => {
-  const repliesQueue = [postId];
-  const allReplies = [];
-
-  while (repliesQueue.length > 0) {
-    const currentPostId = repliesQueue.shift();
-    const replies = await Post.find({ parentPost: currentPostId }).sort({
-      createdAt: -1,
-    });
-
-    // Map each reply to retrieve message and other details
-    for (const reply of replies) {
-      const submessage = await Message.findById(reply.messageId);
-      allReplies.push({
-        answer: reply.PostBody,
-        ask: submessage.content,
-        postId: reply._id,
-        createdAt: reply.createdAt,
-        likes: reply.likes,
-        message: submessage._id,
-      });
-
-      // Add reply ID to queue to check for further sub-replies
-      repliesQueue.push(reply._id);
-    }
-  }
-
-  return allReplies;
-};
 
 exports.getUserPosts = async (req, res) => {
   try {
     const { userId } = req.params;
     const AllAnswers = await Post.find({ Author: userId }).countDocuments();
-    // Fetch all top-level posts
-    const posts = await Post.find({
-      $and: [{ Author: userId }, { parentPost: null }],
-    }).sort({ updatedAt: -1 });
-
-    // Map each post and fetch its flat list of replies
+    const posts = await Post.find({ Author: userId }).sort({ createdAt: -1 });
     const PostsData = await Promise.all(
       posts.map(async (post) => {
         const message = await Message.findById(post.messageId);
-
-        // Use getAllReplies to fetch a flat list of all replies to this post
-        const RepliesData = await getAllReplies(post._id);
-
         return {
           answer: post.PostBody,
           ask: message.content,
@@ -177,7 +138,6 @@ exports.getUserPosts = async (req, res) => {
           createdAt: post.createdAt,
           likes: post.likes,
           message: message._id,
-          replies: RepliesData, // All replies at the same level
         };
       })
     );

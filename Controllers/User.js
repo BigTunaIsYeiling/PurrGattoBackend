@@ -67,7 +67,10 @@ exports.getUserData = asyncHandler(async (req, res) => {
   const Messages = await Message.find({
     $and: [{ receiver: id }, { isAnswered: false }],
   });
-  const Notifications = await Notification.find({ user: id }).countDocuments();
+  const Notifications = await Notification.find({
+    user: id,
+    read: false,
+  }).countDocuments();
   const UserData = {
     id: user._id,
     username: user.username,
@@ -195,7 +198,10 @@ exports.getUserByid = asyncHandler(async (req, res) => {
   const Messages = await Message.find({
     $and: [{ receiver: id }, { isAnswered: false }],
   });
-  const Notifications = await Notification.find({ user: id }).countDocuments();
+  const Notifications = await Notification.find({
+    user: id,
+    read: false,
+  }).countDocuments();
   const UserData = {
     id: user._id,
     username: user.username,

@@ -23,7 +23,7 @@ exports.getNotifications = async (req, res) => {
           },
           message: {
             id: message._id,
-            title: message.messageBody,
+            title: message.content,
           },
           createdAt: notification.createdAt,
         };

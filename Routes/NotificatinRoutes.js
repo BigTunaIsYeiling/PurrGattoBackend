@@ -1,5 +1,4 @@
 const route = require("express").Router();
-
 const {
   getNotifications,
   markAllAsRead,
@@ -9,7 +8,7 @@ const {
 const { UserAuth } = require("../Middlewares/UserAuth");
 
 route.get("/", UserAuth, getNotifications);
-route.put("/", UserAuth, markAllAsRead);
+route.get("/Read", UserAuth, markAllAsRead);
 route.delete("/:id", UserAuth, deleteNoti);
 
 module.exports = route;
