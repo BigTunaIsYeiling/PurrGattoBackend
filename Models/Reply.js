@@ -1,34 +1,30 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const PostSchema = new Schema(
+const ReplySchema = new Schema(
   {
-    PostBody: {
+    content: {
       type: String,
       required: true,
     },
-    messageId: {
+    postId: {
+      type: Schema.Types.ObjectId,
+      ref: "Post",
+      required: true,
+    },
+    originalMessage: {
       type: Schema.Types.ObjectId,
       ref: "Message",
     },
-    Author: {
+    sender: {
       type: Schema.Types.ObjectId,
       ref: "User",
+      default: null, // Null if anonymous
     },
-    likes: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
-    replies: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Reply",
-      },
-    ],
   },
   {
     timestamps: true,
   }
 );
+
+module.exports = mongoose.model("Reply", ReplySchema);

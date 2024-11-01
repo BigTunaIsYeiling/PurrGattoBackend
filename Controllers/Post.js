@@ -1,6 +1,7 @@
 const Post = require("../Models/Post");
 const Message = require("../Models/Message");
 const User = require("../Models/User");
+const Reply = require("../Models/Reply");
 exports.createPost = async (req, res) => {
   try {
     const id = req.user;
@@ -88,5 +89,35 @@ exports.DeletePost = async (req, res) => {
     res.status(200).json({ message: "Post deleted successfully" });
   } catch (err) {
     res.status(400).json({ error: "Unable to delete post" });
+  }
+};
+
+exports.AddReply = async (req, res) => {
+  try {
+    const id = req.user;
+    const { postId, replyBody } = req.body;
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+    if (replyBody.length < 1)
+      return res.status(400).json({ error: "Post body cannot be empty" });
+    if (id == post.Author) {
+      return res
+        .status(400)
+        .json({ error: "You can't reply to your own post" });
+    }
+    const newReply = new Reply({
+      replyBody,
+      postId,
+      Author: id,
+      originalMessage: post.messageId,
+    });
+    const savedReply = await newReply.save();
+    post.replies.push(savedReply._id);
+    await post.save();
+    res.status(201).json(savedReply);
+  } catch (err) {
+    res.status(400).json({ error: "Unable to add reply" });
   }
 };
