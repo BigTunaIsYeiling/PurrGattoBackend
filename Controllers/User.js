@@ -5,6 +5,7 @@ const asyncHandler = require("express-async-handler");
 const cloudinary = require("../Configs/cloudinaryConfig");
 const Message = require("../Models/Message");
 const Post = require("../Models/Post");
+const Notification = require("../Models/Notification");
 exports.register = asyncHandler(async (req, res) => {
   let errors = [];
   const { username, password } = req.body;
@@ -66,6 +67,7 @@ exports.getUserData = asyncHandler(async (req, res) => {
   const Messages = await Message.find({
     $and: [{ receiver: id }, { isAnswered: false }],
   });
+  const Notifications = await Notification.find({ user: id }).countDocuments();
   const UserData = {
     id: user._id,
     username: user.username,
@@ -74,6 +76,7 @@ exports.getUserData = asyncHandler(async (req, res) => {
     isAdmin: user.isAdmin,
     isTwitter: user.TwitterId ? true : false,
     messages: Messages.length,
+    notifications: Notifications,
   };
   res.status(200).json(UserData);
 });
@@ -192,6 +195,7 @@ exports.getUserByid = asyncHandler(async (req, res) => {
   const Messages = await Message.find({
     $and: [{ receiver: id }, { isAnswered: false }],
   });
+  const Notifications = await Notification.find({ user: id }).countDocuments();
   const UserData = {
     id: user._id,
     username: user.username,
@@ -200,6 +204,7 @@ exports.getUserByid = asyncHandler(async (req, res) => {
     isAdmin: user.isAdmin,
     isTwitter: user.TwitterId ? true : false,
     messages: Messages.length,
+    notifications: Notifications,
   };
   res.status(200).json(UserData);
 });

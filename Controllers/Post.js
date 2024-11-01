@@ -1,6 +1,7 @@
 const Post = require("../Models/Post");
 const Message = require("../Models/Message");
 const User = require("../Models/User");
+const Notification = require("../Models/Notification");
 
 exports.createPost = async (req, res) => {
   try {
@@ -22,6 +23,16 @@ exports.createPost = async (req, res) => {
     const savedPost = await newPost.save();
     message.isAnswered = true;
     await message.save();
+    if (message.sender) {
+      const newNotification = new Notification({
+        user: message.sender,
+        fromUser: id,
+        post: savedPost._id,
+        message: messageId,
+        type: "reply",
+      });
+      await newNotification.save();
+    }
     res.status(201).json(savedPost);
   } catch (err) {
     res.status(400).json({ error: "Unable to create post" });
@@ -57,6 +68,17 @@ exports.createReplyPost = async (req, res) => {
     message.isAnswered = true;
     await message.save();
 
+    if (message.sender) {
+      const newNotification = new Notification({
+        user: message.sender,
+        fromUser: id,
+        post: savedPost._id,
+        message: messageId,
+        type: "reply",
+      });
+      await newNotification.save();
+    }
+
     // Find the top-level post and update its `updatedAt` field
     let topLevelPost = await Post.findById(parentPostId);
     while (topLevelPost.parentPost) {
@@ -84,6 +106,15 @@ exports.likePost = async (req, res) => {
       post.likes = post.likes.filter((userId) => userId.toString() !== id);
     } else {
       post.likes.push(id);
+      if (post.Author.toString() !== id.toString()) {
+        const newNotification = new Notification({
+          user: post.Author,
+          fromUser: id,
+          post: post._id,
+          type: "like",
+        });
+        await newNotification.save();
+      }
     }
     const updatedPost = await post.save();
     res.status(200).json(updatedPost);
@@ -147,12 +178,10 @@ exports.getUserPosts = async (req, res) => {
           likes: post.likes,
           message: message._id,
           replies: RepliesData, // All replies at the same level
-          AllAnswers: AllAnswers,
         };
       })
     );
-
-    res.status(200).json(PostsData);
+    res.status(200).json({ PostsData, AllAnswers });
   } catch (err) {
     res.status(400).json({ error: "Unable to get posts" });
   }
