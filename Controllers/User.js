@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
 const cloudinary = require("../Configs/cloudinaryConfig");
 const Message = require("../Models/Message");
+const Post = require("../Models/Post");
 exports.register = asyncHandler(async (req, res) => {
   let errors = [];
   const { username, password } = req.body;
@@ -100,14 +101,18 @@ exports.RefreshToken = asyncHandler(async (req, res) => {
 exports.GetUsersList = asyncHandler(async (req, res) => {
   const id = req.user;
   const users = await User.find({ _id: { $ne: id } });
-  const UsersData = users.map((user) => {
-    return {
-      id: user._id,
-      username: user.username,
-      avatar: user.avatar.url,
-      bio: user.bio,
-    };
-  });
+  const UsersData = await Promise.all(
+    users.map(async (user) => {
+      const Answers = await Post.find({ Author: user._id }).countDocuments();
+      return {
+        id: user._id,
+        username: user.username,
+        avatar: user.avatar.url,
+        bio: user.bio,
+        answers: Answers,
+      };
+    })
+  );
   return res.status(200).json(UsersData);
 });
 
