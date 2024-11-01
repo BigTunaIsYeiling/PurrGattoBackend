@@ -15,7 +15,6 @@ exports.createMessage = async (req, res) => {
       content,
       sender: senderId,
       receiver: receiverId,
-      isAnswered: false,
     });
     await message.save();
     res.status(201).json(message);

@@ -21,6 +21,11 @@ const messageSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    replyToPost: {
+      type: Schema.Types.ObjectId,
+      ref: "Post", // Reference to the post this message is replying to
+      default: null,
+    },
   },
   {
     timestamps: true,
