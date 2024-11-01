@@ -22,6 +22,29 @@ exports.createMessage = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+exports.createReplyMessage = async (req, res) => {
+  try {
+    const { content, senderId, receiverId, postId } = req.body;
+    if (content.trim().length < 1) {
+      return res.status(400).json({ error: "Message can't be empty" });
+    }
+    if (senderId == receiverId) {
+      return res
+        .status(400)
+        .json({ error: "You can't send message to yourself" });
+    }
+    const message = new Message({
+      content,
+      sender: senderId,
+      receiver: receiverId,
+      replyToPost: postId,
+    });
+    await message.save();
+    res.status(201).json(message);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 exports.GetUserMessages = async (req, res) => {
   try {

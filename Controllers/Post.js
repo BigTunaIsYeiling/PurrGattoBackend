@@ -1,7 +1,7 @@
 const Post = require("../Models/Post");
 const Message = require("../Models/Message");
 const User = require("../Models/User");
-const Reply = require("../Models/Reply");
+
 exports.createPost = async (req, res) => {
   try {
     const id = req.user;
@@ -18,6 +18,33 @@ exports.createPost = async (req, res) => {
       PostBody,
       messageId,
       Author: id,
+    });
+    const savedPost = await newPost.save();
+    message.isAnswered = true;
+    await message.save();
+    res.status(201).json(savedPost);
+  } catch (err) {
+    res.status(400).json({ error: "Unable to create post" });
+  }
+};
+
+exports.createReplyPost = async (req, res) => {
+  try {
+    const id = req.user;
+    const { PostBody, messageId, parentPostId } = req.body;
+    if (PostBody.length < 1)
+      return res.status(400).json({ error: "Post body cannot be empty" });
+    const message = await Message.findById(messageId);
+    if (message.receiver.toString() !== id.toString()) {
+      return res.status(400).json({
+        error: "You are not authorized to create a post for this message",
+      });
+    }
+    const newPost = new Post({
+      PostBody,
+      messageId,
+      Author: id,
+      parentPost: parentPostId,
     });
     const savedPost = await newPost.save();
     message.isAnswered = true;
@@ -55,6 +82,19 @@ exports.getUserPosts = async (req, res) => {
     const PostsData = await Promise.all(
       posts.map(async (post) => {
         const message = await Message.findById(post.messageId);
+        const Replies = await Post.find({ parentPost: post._id }).sort({
+          createdAt: -1,
+        });
+        const RepliesData = Replies.map((reply) => {
+          return {
+            answer: reply.PostBody,
+            ask: message.content,
+            postId: reply.id,
+            createdAt: reply.createdAt,
+            likes: reply.likes,
+            message: message._id,
+          };
+        });
         return {
           answer: post.PostBody,
           ask: message.content,
@@ -62,6 +102,7 @@ exports.getUserPosts = async (req, res) => {
           createdAt: post.createdAt,
           likes: post.likes,
           message: message._id,
+          replies: RepliesData,
         };
       })
     );

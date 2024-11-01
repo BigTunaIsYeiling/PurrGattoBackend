@@ -21,6 +21,11 @@ const PostSchema = new Schema(
         ref: "User",
       },
     ],
+    parentPost: {
+      type: Schema.Types.ObjectId,
+      ref: "Post",
+      default: null,
+    },
   },
   {
     timestamps: true,

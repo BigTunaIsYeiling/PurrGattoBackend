@@ -23,7 +23,7 @@ const messageSchema = new Schema(
     },
     replyToPost: {
       type: Schema.Types.ObjectId,
-      ref: "Post", // Reference to the post this message is replying to
+      ref: "Post",
       default: null,
     },
   },
