@@ -169,3 +169,73 @@ exports.DeletePost = async (req, res) => {
     res.status(400).json({ error: "Unable to delete post" });
   }
 };
+
+// Recursive function to fetch all parent posts
+const fetchParentPosts = async (post) => {
+  const parentPosts = [];
+  while (post && post.parentPost) {
+    post = await Post.findById(post.parentPost)
+      .populate("Author", "name")
+      .populate("likes", "name");
+    if (post) parentPosts.push(post);
+  }
+  return parentPosts.reverse(); // Reverse to order from top-level down
+};
+
+// Recursive function to fetch all child posts
+const fetchChildPosts = async (postId) => {
+  const childPosts = [];
+  const children = await Post.find({ parentPost: postId })
+    .populate("Author", "name")
+    .populate("likes", "name");
+
+  for (const child of children) {
+    childPosts.push(child);
+    const subChildren = await fetchChildPosts(child._id); // Recursively fetch deeper children
+    childPosts.push(...subChildren);
+  }
+  return childPosts;
+};
+
+exports.getPostWithRelations = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    let currentPost = await Post.findById(postId)
+      .populate("Author", "name")
+      .populate("likes", "name");
+
+    if (!currentPost) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    // Fetch all parent posts
+    const parentPosts = await fetchParentPosts(currentPost);
+
+    // Fetch all child posts
+    const childPosts = await fetchChildPosts(postId);
+
+    // Combine all related posts
+    const relatedPosts = [...parentPosts, currentPost, ...childPosts];
+    const PostsData = await Promise.all(
+      relatedPosts.map(async (post) => {
+        const message = await Message.findById(post.messageId);
+        const user = await User.findById(post.Author._id);
+        return {
+          answer: post.PostBody,
+          ask: message.content,
+          postId: post._id,
+          createdAt: post.createdAt,
+          likes: post.likes.map((like) => like._id),
+          message: message._id,
+          username: user.username,
+          avatar: user.avatar.url,
+          isSubAnswer: post.parentPost ? true : false,
+        };
+      })
+    );
+    res.json(PostsData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

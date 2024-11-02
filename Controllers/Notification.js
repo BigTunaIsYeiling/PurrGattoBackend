@@ -26,6 +26,11 @@ exports.getNotifications = async (req, res) => {
             title: message.content,
           },
           createdAt: notification.createdAt,
+          post: {
+            id: post._id,
+            title: post.PostBody,
+          },
+          notLink: `/${fromUser._id}/post/${post._id}`,
         };
       } else {
         return {
@@ -40,6 +45,7 @@ exports.getNotifications = async (req, res) => {
             title: post.PostBody,
           },
           createdAt: notification.createdAt,
+          notLink: `/${id}/post/${post._id}`,
         };
       }
     })
