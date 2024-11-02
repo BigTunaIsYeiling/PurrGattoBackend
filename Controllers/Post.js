@@ -127,6 +127,7 @@ exports.getUserPosts = async (req, res) => {
   try {
     const { userId } = req.params;
     const AllAnswers = await Post.find({ Author: userId }).countDocuments();
+    const user = await User.findById(userId);
     const posts = await Post.find({ Author: userId }).sort({ createdAt: -1 });
     const PostsData = await Promise.all(
       posts.map(async (post) => {
@@ -138,6 +139,8 @@ exports.getUserPosts = async (req, res) => {
           createdAt: post.createdAt,
           likes: post.likes,
           message: message._id,
+          username: user.username,
+          avatar: user.avatar.url,
         };
       })
     );
