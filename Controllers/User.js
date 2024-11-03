@@ -215,3 +215,49 @@ exports.getUserByid = asyncHandler(async (req, res) => {
   };
   res.status(200).json(UserData);
 });
+
+exports.DeleteUser = asyncHandler(async (req, res) => {
+  const id = req.user;
+
+  // Find the user to delete
+  const user = await User.findById(id);
+
+  // Find all posts by the user
+  const posts = await Post.find({ Author: id }).select("_id");
+
+  // Find all messages related to those posts and set `replyToPost` to null in bulk
+  await Message.updateMany(
+    { replyToPost: { $in: posts.map((post) => post._id) } },
+    { $set: { replyToPost: null } }
+  );
+
+  // Delete all posts by the user
+  await Post.deleteMany({ Author: id });
+
+  // Delete all messages where the user is the receiver
+  await Message.deleteMany({ receiver: id });
+
+  // Find all messages sent by the user and set `sender` to null in bulk
+  await Message.updateMany({ sender: id }, { $set: { sender: null } });
+
+  // Delete notifications related to the user as sender or receiver
+  await Notification.deleteMany({ $or: [{ user: id }, { fromUser: id }] });
+
+  // Delete user’s avatar from Cloudinary if it exists
+  if (user.avatar.publicId) {
+    await cloudinary.uploader.destroy(user.avatar.publicId);
+  }
+
+  // Delete the user
+  await User.findByIdAndDelete(id);
+
+  // log out
+  res.cookie("token", "", {
+    httpOnly: true,
+    expires: new Date(0),
+  });
+  res.clearCookie("token");
+
+  // Send response
+  return res.status(200).json({ message: "User deleted successfully" });
+});

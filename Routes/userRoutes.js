@@ -11,6 +11,7 @@ const {
   UpdateUser,
   handleTwitterAuth,
   getUserByid,
+  DeleteUser
 } = require("../Controllers/User");
 const {
   Validate,
@@ -27,6 +28,7 @@ router.put("/", UserAuth, upload.single("avatar"), UpdateUser);
 router.get("/users", UserAuth, GetUsersList);
 router.get("/refresh", UserAuth, RefreshToken);
 router.get("/logout", UserAuth, logout);
+router.delete("/", UserAuth, DeleteUser);
 
 router.get("/auth/twitter", passport.authenticate("twitter"));
 router.get(
