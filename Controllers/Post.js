@@ -172,6 +172,7 @@ exports.getUserPosts = async (req, res) => {
           message: message._id,
           username: user.username,
           avatar: user.avatar.url,
+          isParentPost: post.parentPost ? false : true,
         };
       })
     );
