@@ -93,32 +93,63 @@ exports.createReplyPost = async (req, res) => {
     res.status(400).json({ error: "Unable to create post" });
   }
 };
-
 exports.likePost = async (req, res) => {
   try {
-    const id = req.user;
+    const id = req.user; // ID of the user liking the post
     const { postId } = req.body;
+
+    // Find the post by ID
     const post = await Post.findById(postId);
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
-    if (post.likes.includes(id)) {
+
+    // Check if the user has already liked the post
+    const hasLiked = post.likes.includes(id);
+
+    if (hasLiked) {
+      // If already liked, remove the like
       post.likes = post.likes.filter((userId) => userId.toString() !== id);
+
+      // Remove the "like" notification if it exists
+      await Notification.findOneAndDelete({
+        user: post.Author,
+        fromUser: id,
+        post: post._id,
+        type: "like",
+      });
     } else {
+      // If not liked, add the like
       post.likes.push(id);
+
+      // Only create a notification if the post author is not the same as the liker
       if (post.Author.toString() !== id.toString()) {
-        const newNotification = new Notification({
+        // Check if a "like" notification already exists
+        const existingNotification = await Notification.findOne({
           user: post.Author,
           fromUser: id,
           post: post._id,
           type: "like",
         });
-        await newNotification.save();
+
+        // If no notification exists, create a new one
+        if (!existingNotification) {
+          const newNotification = new Notification({
+            user: post.Author,
+            fromUser: id,
+            post: post._id,
+            type: "like",
+          });
+          await newNotification.save();
+        }
       }
     }
+
+    // Save the updated post
     const updatedPost = await post.save();
     res.status(200).json(updatedPost);
   } catch (err) {
+    console.error(err);
     res.status(400).json({ error: "Unable to like post" });
   }
 };
@@ -147,26 +178,6 @@ exports.getUserPosts = async (req, res) => {
     res.status(200).json({ PostsData, AllAnswers });
   } catch (err) {
     res.status(400).json({ error: "Unable to get posts" });
-  }
-};
-
-exports.DeletePost = async (req, res) => {
-  try {
-    const id = req.user;
-    const { postId } = req.params;
-    const post = await Post.findById(postId);
-    if (!post) {
-      return res.status(404).json({ error: "Post not found" });
-    }
-    if (post.Author.toString() !== id.toString()) {
-      return res.status(400).json({
-        error: "You are not authorized to delete this post",
-      });
-    }
-    await Post.findByIdAndDelete(postId);
-    res.status(200).json({ message: "Post deleted successfully" });
-  } catch (err) {
-    res.status(400).json({ error: "Unable to delete post" });
   }
 };
 
@@ -199,15 +210,18 @@ const fetchChildPosts = async (postId) => {
 
 exports.getPostWithRelations = async (req, res) => {
   try {
-    const { postId } = req.params;
+    const { postId, userId } = req.params;
     let currentPost = await Post.findById(postId)
       .populate("Author", "name")
       .populate("likes", "name");
-
     if (!currentPost) {
       return res.status(404).json({ message: "Post not found" });
     }
-
+    if (currentPost.Author._id.toString() != userId) {
+      return res
+        .status(404)
+        .json({ message: "This user ain't the author of this post" });
+    }
     // Fetch all parent posts
     const parentPosts = await fetchParentPosts(currentPost);
 
@@ -237,5 +251,40 @@ exports.getPostWithRelations = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.deletePost = async (req, res) => {
+  try {
+    // Find the post to delete
+    const { postId } = req.params;
+    const post = await Post.findById(postId);
+    if (!post) {
+      console.log("Post not found; cannot be deleted.");
+      return;
+    }
+    // Recursively delete all child posts
+    const deleteChildPosts = async (parentPostId) => {
+      const childPosts = await Post.find({ parentPost: parentPostId });
+      for (let child of childPosts) {
+        await deleteChildPosts(child._id); // Recursively delete child posts
+        await Notification.deleteMany({ post: child._id }); // Remove related notifications for each child post
+        await Post.findByIdAndDelete(child._id);
+      }
+    };
+    await deleteChildPosts(postId);
+
+    // Delete related notifications for this post
+    await Notification.deleteMany({ post: postId });
+    const relatedmessages = await Message.find({ replyToPost: postId });
+    relatedmessages.forEach(async (message) => {
+      message.replyToPost = null;
+      await message.save();
+    });
+    // Delete the post itself
+    await Post.findByIdAndDelete(postId);
+    return res.status(200).json({ message: "Post deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting post:", error);
   }
 };

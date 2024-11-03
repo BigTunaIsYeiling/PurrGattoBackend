@@ -16,9 +16,14 @@ passport.use(
         if (!user) {
           const userProfileImage = profile._json.profile_image_url_https;
           const image = userProfileImage.replace("_normal", "");
+          const UsedUsername = await User.find({
+            username: profile.username.toLowerCase(),
+          });
           const newUser = new User({
             TwitterId: profile.id,
-            username: profile.username,
+            username: UsedUsername
+              ? profile.username.toLowerCase() + profile.id.slice(0, 5)
+              : profile.username.toLowerCase(),
             avatar: {
               url: image,
               publicId: null,

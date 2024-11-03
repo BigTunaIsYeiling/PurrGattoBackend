@@ -6,17 +6,18 @@ const cloudinary = require("../Configs/cloudinaryConfig");
 const Message = require("../Models/Message");
 const Post = require("../Models/Post");
 const Notification = require("../Models/Notification");
+
 exports.register = asyncHandler(async (req, res) => {
   let errors = [];
   const { username, password } = req.body;
-  const userExists = await User.findOne({ username });
+  const userExists = await User.findOne({ username: username.toLowerCase() });
   if (userExists) {
     errors.push("User already exists");
     return res.status(400).json({ errors });
   }
   const hashedPassword = await argon.hash(password);
   const user = await User.create({
-    username,
+    username: username.toLowerCase(),
     password: hashedPassword,
   });
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -32,7 +33,7 @@ exports.register = asyncHandler(async (req, res) => {
 exports.login = asyncHandler(async (req, res) => {
   let errors = [];
   const { username, password } = req.body;
-  const user = await User.findOne({ username });
+  const user = await User.findOne({ username: username.toLowerCase() });
   if (!user) {
     errors.push("User does not exist");
     return res.status(400).json({ errors });
@@ -81,7 +82,7 @@ exports.getUserData = asyncHandler(async (req, res) => {
     messages: Messages.length,
     notifications: Notifications,
   };
-  res.status(200).json(UserData);
+  return res.status(200).json(UserData);
 });
 
 exports.RefreshToken = asyncHandler(async (req, res) => {
@@ -144,12 +145,12 @@ exports.UpdateUser = asyncHandler(async (req, res) => {
       return res.status(400).json({ errors });
     }
 
-    const userExists = await User.findOne({ username });
+    const userExists = await User.findOne({ username: username.toLowerCase() });
     if (userExists) {
       errors.push("Username already exists");
       return res.status(400).json({ errors });
     }
-    user.username = username;
+    user.username = username.toLowerCase();
   }
   if (bio) {
     if (bio.length > 100 || bio.trim().length == 0) {
