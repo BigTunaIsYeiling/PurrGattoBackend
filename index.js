@@ -14,27 +14,31 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// Configure CORS with credentials and specific origin
+app.use(
+  cors({
+    origin: "https://purrgato.vercel.app",
+    credentials: true, // Allows cookies to be sent
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  })
+);
+
+// Configure express-session with cross-origin cookie settings
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: {
-      httpOnly: true,
-      secure: true, // Only allow cookies over HTTPS
-      sameSite: "none", // Allow cookies in cross-origin requests
+      httpOnly: true,  // Only accessible by the server
+      secure: true,    // Requires HTTPS
+      sameSite: "none" // Allows cross-origin requests
     },
   })
 );
+
 app.use(passport.initialize());
 app.use(passport.session());
-
-app.use(
-  cors({
-    origin: "https://purrgato.vercel.app",
-    credentials: true,
-  })
-);
 
 app.use("/user", require("./Routes/userRoutes"));
 app.use("/message", require("./Routes/MessageRoute"));
