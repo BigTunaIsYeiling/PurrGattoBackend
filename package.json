@@ -26,6 +26,7 @@
     "multer-storage-cloudinary": "^4.0.0",
     "nodemon": "^3.1.7",
     "passport": "^0.7.0",
-    "passport-twitter": "^1.0.4"
+    "passport-twitter": "^1.0.4",
+    "twitter-api-v2": "^1.18.1"
   }
 }
