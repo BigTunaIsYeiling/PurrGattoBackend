@@ -29,6 +29,7 @@ exports.register = asyncHandler(async (req, res) => {
     maxAge: 30 * 24 * 60 * 60 * 1000,
     sameSite: "none",
     secure: true,
+    path: "/",
   });
   res.status(201).json({ message: "User created successfully" });
 });
@@ -54,6 +55,7 @@ exports.login = asyncHandler(async (req, res) => {
     maxAge: 30 * 24 * 60 * 60 * 1000,
     sameSite: "none",
     secure: true,
+    path: "/",
   });
   res.status(200).json({ message: "User logged in successfully" });
 });
