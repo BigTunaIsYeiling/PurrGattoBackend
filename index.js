@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const passport = require("passport");
 const cors = require("cors");
+const MongoStore = require("connect-mongo");
 require("dotenv").config();
 require("./Configs/passport");
 
@@ -29,14 +30,18 @@ app.use(
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI, // Your MongoDB connection string
+      collectionName: "sessions",
+    }),
     cookie: {
-      httpOnly: true,  // Only accessible by the server
-      secure: true,    // Requires HTTPS
-      sameSite: "none" // Allows cross-origin requests
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
     },
   })
 );
-
 app.use(passport.initialize());
 app.use(passport.session());
 
