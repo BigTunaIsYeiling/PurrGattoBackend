@@ -261,31 +261,50 @@ exports.deletePost = async (req, res) => {
     const { postId } = req.params;
     const post = await Post.findById(postId);
     if (!post) {
-      console.log("Post not found; cannot be deleted.");
-      return;
+      return res
+        .status(404)
+        .json({ message: "Post not found; cannot be deleted." });
     }
-    // Recursively delete all child posts
-    const deleteChildPosts = async (parentPostId) => {
-      const childPosts = await Post.find({ parentPost: parentPostId });
-      for (let child of childPosts) {
-        await deleteChildPosts(child._id); // Recursively delete child posts
-        await Notification.deleteMany({ post: child._id }); // Remove related notifications for each child post
-        await Post.findByIdAndDelete(child._id);
-      }
-    };
-    await deleteChildPosts(postId);
 
-    // Delete related notifications for this post
-    await Notification.deleteMany({ post: postId });
-    const relatedmessages = await Message.find({ replyToPost: postId });
-    relatedmessages.forEach(async (message) => {
-      message.replyToPost = null;
-      await message.save();
-    });
-    // Delete the post itself
+    // Find the immediate child of the post to be deleted
+    let currentPost = await Post.findOne({ parentPost: postId });
+
+    // Update the chain of posts
+    let parentPost = post.parentPost;
+    while (currentPost) {
+      // Update the parentPost of the current child
+      await Post.findByIdAndUpdate(currentPost._id, { parentPost: parentPost });
+
+      // Move down the chain
+      parentPost = currentPost._id;
+      currentPost = await Post.findOne({ parentPost: currentPost._id });
+    }
+
+    // Update messages to point to the `parentPost` of the deleted post, if applicable
+    await Message.updateMany(
+      { replyToPost: postId },
+      { $set: { replyToPost: post.parentPost } }
+    );
+
+    // Update notifications to reference the `parentPost` of the deleted post if applicable
+    await Notification.updateMany(
+      { post: postId },
+      { $set: { post: post.parentPost } }
+    );
+
+    // Finally, delete the post itself
     await Post.findByIdAndDelete(postId);
-    return res.status(200).json({ message: "Post deleted successfully" });
+
+    // Send response
+    return res
+      .status(200)
+      .json({
+        message: "Post deleted successfully, thread continuity maintained",
+      });
   } catch (error) {
     console.error("Error deleting post:", error);
+    return res
+      .status(500)
+      .json({ message: "An error occurred while deleting the post" });
   }
 };

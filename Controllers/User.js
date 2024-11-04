@@ -243,6 +243,9 @@ exports.DeleteUser = asyncHandler(async (req, res) => {
   // Delete notifications related to the user as sender or receiver
   await Notification.deleteMany({ $or: [{ user: id }, { fromUser: id }] });
 
+  // Remove user from posts"s likes array
+  await Post.updateMany({ likes: id }, { $pull: { likes: id } });
+
   // Delete user’s avatar from Cloudinary if it exists
   if (user.avatar.publicId) {
     await cloudinary.uploader.destroy(user.avatar.publicId);
