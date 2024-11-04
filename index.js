@@ -19,6 +19,11 @@ app.use(
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
+    cookie: {
+      httpOnly: true,
+      secure: true, // Only allow cookies over HTTPS
+      sameSite: "none", // Allow cookies in cross-origin requests
+    },
   })
 );
 app.use(passport.initialize());
