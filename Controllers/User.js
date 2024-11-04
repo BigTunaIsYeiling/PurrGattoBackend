@@ -277,6 +277,8 @@ exports.DeleteUser = asyncHandler(async (req, res) => {
   res.cookie("token", "", {
     httpOnly: true,
     expires: new Date(0),
+    sameSite: "none",
+    secure: true,
   });
   res.clearCookie("token");
 
