@@ -1,5 +1,6 @@
 const Message = require("../Models/Message");
 const Post = require("../Models/Post");
+const asyncHandler = require("express-async-handler");
 exports.createMessage = async (req, res) => {
   try {
     const { content, senderId, receiverId } = req.body;

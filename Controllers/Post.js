@@ -2,8 +2,9 @@ const Post = require("../Models/Post");
 const Message = require("../Models/Message");
 const User = require("../Models/User");
 const Notification = require("../Models/Notification");
+const asyncHandler = require("express-async-handler");
 
-exports.createPost = async (req, res) => {
+exports.createPost = asyncHandler(async (req, res) => {
   try {
     const id = req.user;
     const { PostBody, messageId } = req.body;
@@ -37,9 +38,9 @@ exports.createPost = async (req, res) => {
   } catch (err) {
     res.status(400).json({ error: "Unable to create post" });
   }
-};
+});
 
-exports.createReplyPost = async (req, res) => {
+exports.createReplyPost = asyncHandler(async (req, res) => {
   try {
     const id = req.user;
     const { PostBody, messageId, parentPostId } = req.body;
@@ -92,8 +93,9 @@ exports.createReplyPost = async (req, res) => {
   } catch (err) {
     res.status(400).json({ error: "Unable to create post" });
   }
-};
-exports.likePost = async (req, res) => {
+});
+
+exports.likePost = asyncHandler(async (req, res) => {
   try {
     const id = req.user; // ID of the user liking the post
     const { postId } = req.body;
@@ -152,9 +154,9 @@ exports.likePost = async (req, res) => {
     console.error(err);
     res.status(400).json({ error: "Unable to like post" });
   }
-};
+});
 
-exports.getUserPosts = async (req, res) => {
+exports.getUserPosts = asyncHandler(async (req, res) => {
   try {
     const { userId } = req.params;
     const AllAnswers = await Post.find({ Author: userId }).countDocuments();
@@ -180,7 +182,7 @@ exports.getUserPosts = async (req, res) => {
   } catch (err) {
     res.status(400).json({ error: "Unable to get posts" });
   }
-};
+});
 
 // Recursive function to fetch all parent posts
 const fetchParentPosts = async (post) => {
@@ -209,7 +211,7 @@ const fetchChildPosts = async (postId) => {
   return childPosts;
 };
 
-exports.getPostWithRelations = async (req, res) => {
+exports.getPostWithRelations = asyncHandler(async (req, res) => {
   try {
     const { postId, userId } = req.params;
     let currentPost = await Post.findById(postId)
@@ -253,9 +255,9 @@ exports.getPostWithRelations = async (req, res) => {
     console.error(error);
     res.status(500).json({ message: "Server error" });
   }
-};
+});
 
-exports.deletePost = async (req, res) => {
+exports.deletePost = asyncHandler(async (req, res) => {
   try {
     // Find the post to delete
     const { postId } = req.params;
@@ -286,25 +288,20 @@ exports.deletePost = async (req, res) => {
       { $set: { replyToPost: post.parentPost } }
     );
 
-    // Update notifications to reference the `parentPost` of the deleted post if applicable
-    await Notification.updateMany(
-      { post: postId },
-      { $set: { post: post.parentPost } }
-    );
+    // Delete notifications that post is "postId"
+    await Notification.deleteMany({ post: postId });
 
     // Finally, delete the post itself
     await Post.findByIdAndDelete(postId);
 
     // Send response
-    return res
-      .status(200)
-      .json({
-        message: "Post deleted successfully, thread continuity maintained",
-      });
+    return res.status(200).json({
+      message: "Post deleted successfully, thread continuity maintained",
+    });
   } catch (error) {
     console.error("Error deleting post:", error);
     return res
       .status(500)
       .json({ message: "An error occurred while deleting the post" });
   }
-};
+});

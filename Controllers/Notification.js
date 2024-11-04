@@ -2,12 +2,14 @@ const Notification = require("../Models/Notification");
 const User = require("../Models/User");
 const Post = require("../Models/Post");
 const Message = require("../Models/Message");
+const asyncHandler = require("express-async-handler");
 
-exports.getNotifications = async (req, res) => {
+exports.getNotifications = asyncHandler(async (req, res) => {
   const id = req.user;
   const notifications = await Notification.find({ user: id }).sort({
     createdAt: -1,
   });
+  
   const NotificationsData = await Promise.all(
     notifications.map(async (notification) => {
       const fromUser = await User.findById(notification.fromUser);
@@ -51,16 +53,16 @@ exports.getNotifications = async (req, res) => {
     })
   );
   res.status(200).json(NotificationsData);
-};
+});
 
-exports.markAllAsRead = async (req, res) => {
+exports.markAllAsRead = asyncHandler(async (req, res) => {
   const id = req.user;
   await Notification.updateMany({ user: id }, { read: true });
   res.status(200).json({ message: "All notifications marked as read" });
-};
+});
 
-exports.deleteNoti = async (req, res) => {
+exports.deleteNoti = asyncHandler(async (req, res) => {
   const id = req.params.id;
   await Notification.findByIdAndDelete(id);
   res.status(200).json({ message: "Notification deleted successfully" });
-};
+});
