@@ -6,6 +6,7 @@ const cloudinary = require("../Configs/cloudinaryConfig");
 const Message = require("../Models/Message");
 const Post = require("../Models/Post");
 const Notification = require("../Models/Notification");
+const { default: mongoose } = require("mongoose");
 
 exports.register = asyncHandler(async (req, res) => {
   let errors = [];
@@ -195,27 +196,39 @@ exports.handleTwitterAuth = asyncHandler(async (req, res) => {
 
 exports.getUserByid = asyncHandler(async (req, res) => {
   const id = req.params.id;
+
+  // Check if the provided ID is a valid ObjectId
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "Invalid user ID" });
+  }
+
   const user = await User.findById(id);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
   const Messages = await Message.find({
     $and: [{ receiver: id }, { isAnswered: false }],
   });
+
   const Notifications = await Notification.find({
     user: id,
     read: false,
   }).countDocuments();
+
   const UserData = {
     id: user._id,
     username: user.username,
     avatar: user.avatar.url,
     bio: user.bio,
     isAdmin: user.isAdmin,
-    isTwitter: user.TwitterId ? true : false,
+    isTwitter: Boolean(user.TwitterId),
     messages: Messages.length,
     notifications: Notifications,
   };
+
   res.status(200).json(UserData);
 });
-
 exports.DeleteUser = asyncHandler(async (req, res) => {
   const id = req.user;
 
