@@ -18,7 +18,7 @@ app.use(cookieParser());
 // Configure CORS with credentials and specific origin
 app.use(
   cors({
-    origin: "https://purrgato.vercel.app",
+    origin: ["http://localhost:3000", "https://purrgato.vercel.app"],
     credentials: true, // Allows cookies to be sent
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
