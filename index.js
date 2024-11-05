@@ -19,19 +19,9 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: ["http://localhost:3000", "https://purrgato.vercel.app"],
-    credentials: true, // Allows cookies to be sent
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
   })
 );
-
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Credentials", true);
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  next();
-});
 
 // Configure express-session with cross-origin cookie settings
 app.use(
@@ -39,18 +29,9 @@ app.use(
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({
-      mongoUrl: process.env.MONGODB_URI, // Your MongoDB connection string
-      collectionName: "sessions",
-    }),
-    cookie: {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
-    },
   })
 );
+
 app.use(passport.initialize());
 app.use(passport.session());
 
