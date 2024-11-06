@@ -24,11 +24,7 @@ exports.register = asyncHandler(async (req, res) => {
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
     expiresIn: "30d",
   });
-  res.cookie("token", token, {
-    httpOnly: true,
-    maxAge: 30 * 24 * 60 * 60 * 1000,
-  });
-  res.status(201).json({ message: "User created successfully" });
+  res.status(201).json({ token });
 });
 
 exports.login = asyncHandler(async (req, res) => {
@@ -47,11 +43,7 @@ exports.login = asyncHandler(async (req, res) => {
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
     expiresIn: "30d",
   });
-  res.cookie("token", token, {
-    httpOnly: true,
-    maxAge: 30 * 24 * 60 * 60 * 1000,
-  });
-  res.status(200).json({ message: "User logged in successfully" });
+  res.status(200).json({ token });
 });
 
 exports.logout = asyncHandler(async (req, res) => {
