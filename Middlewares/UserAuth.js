@@ -2,7 +2,7 @@ const asyncHandler = require("express-async-handler");
 const { verify } = require("jsonwebtoken");
 
 exports.UserAuth = asyncHandler(async (req, res, next) => {
-  const token = req.cookies?.token;
+  const token = req.cookies?.token || req.headers.authorization?.split(" ")[1];
   if (!token) {
     return res.status(401).json({ message: "Not authorized, no token" });
   }
