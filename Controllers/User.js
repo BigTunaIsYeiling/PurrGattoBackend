@@ -94,6 +94,8 @@ exports.RefreshToken = asyncHandler(async (req, res) => {
   res.cookie("token", newToken, {
     httpOnly: true,
     maxAge: 30 * 24 * 60 * 60 * 1000,
+    sameSite: "none",
+    secure: true,
   });
   res.status(200).json({ message: "Token refreshed successfully" });
 });
