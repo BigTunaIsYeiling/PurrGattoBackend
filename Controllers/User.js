@@ -176,11 +176,7 @@ exports.handleTwitterAuth = asyncHandler(async (req, res) => {
   const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, {
     expiresIn: "30d",
   });
-  res.cookie("token", token, {
-    httpOnly: true,
-    maxAge: 30 * 24 * 60 * 60 * 1000,
-  });
-  return res.redirect(`http://localhost:3000/`);
+  res.redirect(`${process.env.FRONTEND_URL}/register/${token}`);
 });
 
 exports.getUserByid = asyncHandler(async (req, res) => {
