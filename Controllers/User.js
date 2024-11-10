@@ -74,7 +74,7 @@ exports.getUserData = asyncHandler(async (req, res) => {
 });
 
 exports.RefreshToken = asyncHandler(async (req, res) => {
-  const token = req.cookies.token;
+  const token = req.headers.authorization?.split(" ")[1];
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });
   }
