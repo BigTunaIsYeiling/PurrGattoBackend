@@ -86,13 +86,7 @@ exports.RefreshToken = asyncHandler(async (req, res) => {
   const newToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
     expiresIn: "30d",
   });
-  res.cookie("token", newToken, {
-    httpOnly: true,
-    maxAge: 30 * 24 * 60 * 60 * 1000,
-    sameSite: "none",
-    secure: true,
-  });
-  res.status(200).json({ message: "Token refreshed successfully" });
+  res.status(200).json({ newToken });
 });
 
 exports.GetUsersList = asyncHandler(async (req, res) => {
@@ -252,11 +246,6 @@ exports.DeleteUser = asyncHandler(async (req, res) => {
   // Delete the user
   await User.findByIdAndDelete(id);
 
-  // log out
-  res.cookie("token", "", {
-    httpOnly: true,
-    expires: new Date(0),
-  });
   res.clearCookie("token");
 
   // Send response
