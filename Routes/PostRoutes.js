@@ -13,7 +13,7 @@ router.post("/", UserAuth, createPost);
 router.post("/reply", UserAuth, createReplyPost);
 router.put("/like", UserAuth, likePost);
 router.get("/:userId", getUserPosts);
-router.delete("/:postId", UserAuth, deletePost);
 router.get("/:userId/p/:postId", getPostWithRelations);
+router.delete("/:postId", UserAuth, deletePost);
 
 module.exports = router;

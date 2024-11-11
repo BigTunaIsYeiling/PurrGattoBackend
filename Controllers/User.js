@@ -53,6 +53,9 @@ exports.logout = asyncHandler(async (req, res) => {
 exports.getUserData = asyncHandler(async (req, res) => {
   const id = req.user;
   const user = await User.findById(id);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
   const Messages = await Message.find({
     $and: [{ receiver: id }, { isAnswered: false }],
   });
