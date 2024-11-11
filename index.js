@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const connectDB = require("./Configs/Database");
 const cookieParser = require("cookie-parser");
-const session = require("express-session");
+// const session = require("express-session");
 const passport = require("passport");
 const cors = require("cors");
 require("dotenv").config();
@@ -31,13 +31,13 @@ app.use(
   })
 );
 
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-  })
-);
+// app.use(
+//   session({
+//     secret: process.env.SESSION_SECRET,
+//     resave: false,
+//     saveUninitialized: false,
+//   })
+// );
 
 app.use(passport.initialize());
 app.use(passport.session());
