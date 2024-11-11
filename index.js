@@ -2,7 +2,8 @@ const express = require("express");
 const app = express();
 const connectDB = require("./Configs/Database");
 const cookieParser = require("cookie-parser");
-// const session = require("express-session");
+const session = require("express-session");
+const MongoStore = require("connect-mongo");
 const passport = require("passport");
 const cors = require("cors");
 require("dotenv").config();
@@ -31,13 +32,16 @@ app.use(
   })
 );
 
-// app.use(
-//   session({
-//     secret: process.env.SESSION_SECRET,
-//     resave: false,
-//     saveUninitialized: false,
-//   })
-// );
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI,
+    }),
+  })
+);
 
 app.use(passport.initialize());
 app.use(passport.session());
